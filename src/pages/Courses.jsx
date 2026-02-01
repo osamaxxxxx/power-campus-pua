@@ -299,8 +299,8 @@ const Courses = () => {
                                         padding: '0.75rem',
                                         borderRadius: '12px',
                                         border: '1px solid var(--glass-border)',
-                                        background: 'rgba(255,255,255,0.05)',
-                                        color: 'var(--text-primary)',
+                                        background: 'var(--background)',
+                                        color: 'var(--text)',
                                         fontSize: '0.875rem',
                                         resize: 'vertical'
                                     }}
@@ -318,6 +318,7 @@ const Courses = () => {
                                         max="6"
                                         value={formData.creditHours}
                                         onChange={(e) => setFormData({ ...formData, creditHours: e.target.value })}
+                                        style={{ background: 'var(--background)' }}
                                     />
                                 </div>
                             </div>
@@ -332,13 +333,14 @@ const Courses = () => {
                                             value={formData.instructorId || ''}
                                             onChange={(e) => setFormData({ ...formData, instructorId: e.target.value })}
                                             placeholder="Leave empty to assign later"
+                                            style={{ background: 'var(--background)' }}
                                         />
                                     </div>
                                 </div>
                             )}
 
                             <div style={{ display: 'flex', gap: '1rem' }}>
-                                <button type="button" className="btn" style={{ background: 'var(--surface)' }} onClick={() => setShowModal(false)}>
+                                <button type="button" className="btn" style={{ background: 'var(--background)', color: 'var(--text)' }} onClick={() => setShowModal(false)}>
                                     Cancel
                                 </button>
                                 <button type="submit" className="btn btn-primary">

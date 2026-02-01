@@ -14,20 +14,21 @@ import './App.css'
 const Home = () => {
     const { user } = useAuth()
     return (
-        <div style={{ padding: '2rem' }}>
-            <div className="glass" style={{ padding: '3rem', borderRadius: '24px', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
-                <h1 style={{ marginBottom: '1rem' }}>Welcome to Power Campus</h1>
-                <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', fontSize: '1.1rem' }}>
-                    Hello, <strong>{user?.name}</strong>! You are currently logged in as {user?.role === 'Admin' ? 'an' : 'a'} <strong>{user?.role}</strong>.
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+            <div className="glass" style={{ padding: '3rem', borderRadius: '24px', textAlign: 'center', maxWidth: '700px', margin: '0 auto' }}>
+                <h1 style={{ marginBottom: '1rem', color: 'var(--text)' }}>Welcome to Power Campus</h1>
+                <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', fontSize: '1.2rem' }}>
+                    Hello, <strong style={{ color: 'var(--primary)' }}>{user?.name}</strong>! You are currently logged in as {user?.role === 'Admin' ? 'an' : 'a'} <strong>{user?.role}</strong>.
                 </p>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <div className="glass" style={{ padding: '1.5rem', borderRadius: '16px' }}>
-                        <h3 style={{ marginBottom: '0.5rem' }}>Your Dashboard</h3>
-                        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>View your personalized academic overview and statistics.</p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', textAlign: 'left' }}>
+                    <div className="glass" style={{ padding: '2rem', borderRadius: '16px', background: 'var(--surface)' }}>
+                        <h3 style={{ marginBottom: '0.5rem', color: 'var(--text)' }}>Your Dashboard</h3>
+                        <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>View your personalized academic overview and statistics.</p>
                     </div>
-                    <div className="glass" style={{ padding: '1.5rem', borderRadius: '16px' }}>
-                        <h3 style={{ marginBottom: '0.5rem' }}>Next Class</h3>
-                        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>No classes scheduled for the next 24 hours.</p>
+                    <div className="glass" style={{ padding: '2rem', borderRadius: '16px', background: 'var(--surface)' }}>
+                        <h3 style={{ marginBottom: '0.5rem', color: 'var(--text)' }}>Next Class</h3>
+                        <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>No classes scheduled for the next 24 hours.</p>
                     </div>
                 </div>
             </div>

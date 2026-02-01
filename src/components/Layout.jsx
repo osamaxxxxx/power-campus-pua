@@ -1,11 +1,29 @@
+import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { LayoutDashboard, BookOpen, Calendar, GraduationCap, ClipboardCheck, LogOut, User as UserIcon } from 'lucide-react'
+import { useTheme } from '../contexts/ThemeContext'
+import {
+    LayoutDashboard,
+    BookOpen,
+    Calendar,
+    GraduationCap,
+    ClipboardCheck,
+    LogOut,
+    User as UserIcon,
+    Sun,
+    Moon,
+    Menu,
+    X
+} from 'lucide-react'
 
 const Layout = ({ children }) => {
     const { user, logout } = useAuth()
+    const { theme, toggleTheme } = useTheme()
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
     const navigate = useNavigate()
     const location = useLocation()
+
+    const closeMobileMenu = () => setIsMobileMenuOpen(false)
 
     const handleLogout = () => {
         logout()
@@ -26,10 +44,37 @@ const Layout = ({ children }) => {
 
     return (
         <div className="dashboard-layout">
-            <aside className="sidebar glass">
+            <button
+                className="mobile-toggle"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                aria-label="Toggle Menu"
+            >
+                <Menu size={24} />
+            </button>
+
+            <div
+                className={`overlay ${isMobileMenuOpen ? 'visible' : ''}`}
+                onClick={closeMobileMenu}
+            />
+
+            <aside className={`sidebar glass ${isMobileMenuOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
                     <div className="logo-icon small">P</div>
                     <h2>Power Campus</h2>
+                    {isMobileMenuOpen && (
+                        <button
+                            onClick={closeMobileMenu}
+                            style={{
+                                marginLeft: 'auto',
+                                background: 'none',
+                                border: 'none',
+                                color: 'var(--text-muted)',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            <X size={24} />
+                        </button>
+                    )}
                 </div>
 
                 <nav className="sidebar-nav">
@@ -38,6 +83,7 @@ const Layout = ({ children }) => {
                             key={item.path}
                             to={item.path}
                             className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
+                            onClick={closeMobileMenu}
                         >
                             {item.icon}
                             <span>{item.label}</span>
@@ -46,6 +92,11 @@ const Layout = ({ children }) => {
                 </nav>
 
                 <div className="sidebar-footer">
+                    <button className="theme-toggle-btn" onClick={toggleTheme}>
+                        <span>{theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</span>
+                        {theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
+                    </button>
+
                     <div className="user-info">
                         <div className="user-avatar">
                             <UserIcon size={20} />

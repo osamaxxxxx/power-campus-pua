@@ -153,7 +153,7 @@ const Users = () => {
                         placeholder={`Search ${activeTab}...`}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{ background: 'rgba(0,0,0,0.2)' }}
+                        style={{ background: 'var(--background)' }}
                     />
                 </div>
             </div>
@@ -169,7 +169,7 @@ const Users = () => {
                                     <Shield size={24} color={user.role === 'Instructor' ? 'var(--warning)' : 'var(--success)'} />
                                 </div>
                                 <div>
-                                    <h3 style={{ fontSize: '1.1rem' }}>{user.name}</h3>
+                                    <h3 style={{ fontSize: '1.1rem', color: 'var(--text)' }}>{user.name}</h3>
                                     <span style={{
                                         fontSize: '0.75rem',
                                         padding: '2px 8px',
@@ -191,10 +191,10 @@ const Users = () => {
                             </div>
 
                             <div style={{ display: 'flex', gap: '10px' }}>
-                                <button className="btn" style={{ background: 'rgba(255,255,255,0.05)', padding: '8px' }} onClick={() => { setEditingUser(user); setFormData({ name: user.name, email: user.email, password: '', role: user.role }); setShowModal(true); }}>
+                                <button className="btn" style={{ background: 'var(--background)', padding: '8px' }} onClick={() => { setEditingUser(user); setFormData({ name: user.name, email: user.email, password: '', role: user.role }); setShowModal(true); }}>
                                     <Edit2 size={16} color="var(--primary)" />
                                 </button>
-                                <button className="btn" style={{ background: 'rgba(239, 68, 68, 0.05)', padding: '8px' }} onClick={() => handleDelete(user.id)}>
+                                <button className="btn" style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '8px' }} onClick={() => handleDelete(user.id)}>
                                     <Trash2 size={16} color="var(--danger)" />
                                 </button>
                             </div>
@@ -217,8 +217,8 @@ const Users = () => {
                     zIndex: 1000,
                     backdropFilter: 'blur(8px)'
                 }}>
-                    <div className="glass" style={{ padding: '2.5rem', borderRadius: '24px', width: '100%', maxWidth: '500px' }}>
-                        <h2 style={{ marginBottom: '1.5rem' }}>{editingUser ? `Edit ${formData.role}` : `Add New ${formData.role}`}</h2>
+                    <div className="glass" style={{ padding: '2.5rem', borderRadius: '24px', width: '100%', maxWidth: '500px', background: 'var(--surface)' }}>
+                        <h2 style={{ marginBottom: '1.5rem', color: 'var(--text)' }}>{editingUser ? `Edit ${formData.role}` : `Add New ${formData.role}`}</h2>
                         <form onSubmit={handleSubmit}>
                             <div className="form-group" style={{ marginBottom: '1.2rem' }}>
                                 <label>Full Name</label>
@@ -229,6 +229,7 @@ const Users = () => {
                                         required
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        style={{ background: 'var(--background)' }}
                                     />
                                 </div>
                             </div>
@@ -241,6 +242,7 @@ const Users = () => {
                                         required
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                        style={{ background: 'var(--background)' }}
                                     />
                                 </div>
                             </div>
@@ -253,11 +255,12 @@ const Users = () => {
                                         required={!editingUser}
                                         value={formData.password}
                                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                        style={{ background: 'var(--background)' }}
                                     />
                                 </div>
                             </div>
                             <div style={{ display: 'flex', gap: '1rem' }}>
-                                <button type="button" className="btn" style={{ background: 'var(--surface)' }} onClick={() => setShowModal(false)}>Cancel</button>
+                                <button type="button" className="btn" style={{ background: 'var(--background)', color: 'var(--text)' }} onClick={() => setShowModal(false)}>Cancel</button>
                                 <button type="submit" className="btn btn-primary">Save {formData.role}</button>
                             </div>
                         </form>
