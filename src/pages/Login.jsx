@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { LogIn, Mail, Lock, AlertCircle, GraduationCap } from 'lucide-react'
+import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react'
+import logoImg from '../assets/logo-english.png'
 
 const Login = () => {
     const [email, setEmail] = useState('')
@@ -35,9 +36,7 @@ const Login = () => {
         <div className="auth-container">
             <div className="auth-card glass">
                 <div className="auth-header">
-                    <div className="logo-icon">
-                        <GraduationCap size={40} />
-                    </div>
+                    <img src={logoImg} alt="Power Campus" className="auth-logo" />
                     <h1>Power Campus</h1>
                     <p>University Management System</p>
                     <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>Authorized Access Only</p>

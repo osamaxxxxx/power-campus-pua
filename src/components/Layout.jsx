@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import logoImg from '../assets/logo-english.png'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
@@ -59,7 +60,7 @@ const Layout = ({ children }) => {
 
             <aside className={`sidebar glass ${isMobileMenuOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
-                    <div className="logo-icon small">P</div>
+                    <img src={logoImg} alt="Power Campus" className="sidebar-logo" />
                     <h2>Power Campus</h2>
                     {isMobileMenuOpen && (
                         <button

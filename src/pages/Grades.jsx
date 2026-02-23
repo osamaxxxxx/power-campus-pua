@@ -3,17 +3,20 @@ import { useAuth } from '../contexts/AuthContext'
 import gradeService from '../api/gradeService'
 import courseService from '../api/courseService'
 import enrollmentService from '../api/enrollmentService'
-import { GraduationCap, Book, User, Plus, Search, Percent, TrendingUp } from 'lucide-react'
+import { GraduationCap, Book, User, Plus, Search, Percent, TrendingUp, ChevronRight, Award } from 'lucide-react'
 
 const Grades = () => {
     const { user } = useAuth()
     const [courses, setCourses] = useState([])
     const [selectedCourse, setSelectedCourse] = useState(null)
     const [students, setStudents] = useState([])
+    const [selectedStudent, setSelectedStudent] = useState(null)
     const [grades, setGrades] = useState([])
     const [studentGrades, setStudentGrades] = useState([])
+    const [filteredStudentGrades, setFilteredStudentGrades] = useState([])
     const [loading, setLoading] = useState(true)
     const [showModal, setShowModal] = useState(false)
+    const [searchTerm, setSearchTerm] = useState('')
     const [formData, setFormData] = useState({
         studentId: '',
         courseId: '',
@@ -56,11 +59,12 @@ const Grades = () => {
 
     const handleCourseSelect = async (course) => {
         setSelectedCourse(course)
+        setSelectedStudent(null)
+        setFilteredStudentGrades([])
         try {
             const gradeData = await gradeService.getCourseGrades(course.id)
             setGrades(gradeData)
 
-            // Get enrolled students to grade them even if they don't have grades yet
             const enrollmentData = await enrollmentService.getCourseEnrollments(course.id)
             setStudents(enrollmentData)
         } catch (error) {
@@ -68,6 +72,13 @@ const Grades = () => {
             setGrades([])
             setStudents([])
         }
+    }
+
+    const handleStudentSelect = (student) => {
+        setSelectedStudent(student)
+        // Filter grades for this specific student in the selected course
+        const studentSpecificGrades = grades.filter(g => g.studentId === student.studentId)
+        setFilteredStudentGrades(studentSpecificGrades)
     }
 
     const handleSubmitGrade = async (e) => {
@@ -81,12 +92,36 @@ const Grades = () => {
                 maxScore: parseFloat(formData.maxScore)
             })
             setShowModal(false)
-            handleCourseSelect(selectedCourse)
+            // Refresh grades
+            const gradeData = await gradeService.getCourseGrades(selectedCourse.id)
+            setGrades(gradeData)
+            // Refresh the selected student's grades
+            if (selectedStudent) {
+                const studentSpecificGrades = gradeData.filter(g => g.studentId === selectedStudent.studentId)
+                setFilteredStudentGrades(studentSpecificGrades)
+            }
         } catch (error) {
             console.error('Failed to submit grade:', error)
         }
     }
 
+    const openAddGradeModal = (student = null) => {
+        setFormData({
+            studentId: student ? student.studentId.toString() : '',
+            courseId: '',
+            assignmentName: '',
+            score: '',
+            maxScore: '100'
+        })
+        setShowModal(true)
+    }
+
+    const filteredStudents = students.filter(s =>
+        s.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.studentId?.toString().includes(searchTerm)
+    )
+
+    // ─── Student View ───
     if (user.role === 'Student') {
         const average = studentGrades.length > 0
             ? (studentGrades.reduce((acc, g) => acc + g.percentage, 0) / studentGrades.length).toFixed(1)
@@ -166,98 +201,225 @@ const Grades = () => {
         )
     }
 
-    // Instructor View
+    // ─── Instructor / Admin View ───
     return (
         <div className="page-container">
-            <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
                     <h1>Grade Management</h1>
                     <p style={{ color: 'var(--text-muted)' }}>Submit and manage student grades</p>
                 </div>
-                {selectedCourse && (
-                    <button className="btn btn-primary" style={{ width: 'auto' }} onClick={() => { setFormData({ ...formData, studentId: '', assignmentName: '', score: '' }); setShowModal(true); }}>
+                {selectedCourse && selectedStudent && (
+                    <button className="btn btn-primary" style={{ width: 'auto' }} onClick={() => openAddGradeModal(selectedStudent)}>
                         <Plus size={20} />
-                        <span>Submit New Grade</span>
+                        <span>Add Grade</span>
                     </button>
                 )}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '2rem' }}>
-                <div className="course-list">
-                    <h3 style={{ marginBottom: '1rem', fontSize: '1rem' }}>Select Course</h3>
-                    <div className="glass" style={{ borderRadius: '16px', padding: '0.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '240px 260px 1fr', gap: '1.5rem' }}>
+                {/* ── Column 1: Course List ── */}
+                <div>
+                    <h3 style={{ marginBottom: '0.75rem', fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Courses</h3>
+                    <div className="glass" style={{ borderRadius: '16px', padding: '0.5rem', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
                         {courses.map(course => (
                             <div
                                 key={course.id}
                                 onClick={() => handleCourseSelect(course)}
                                 style={{
-                                    padding: '1rem',
+                                    padding: '0.85rem',
                                     borderRadius: '12px',
                                     cursor: 'pointer',
                                     transition: 'var(--transition)',
                                     background: selectedCourse?.id === course.id ? 'var(--primary)' : 'transparent',
+                                    color: selectedCourse?.id === course.id ? 'white' : 'inherit',
                                     marginBottom: '4px',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '12px'
+                                    gap: '10px'
                                 }}
                             >
-                                <Book size={18} opacity={0.7} />
-                                <div style={{ fontSize: '0.9rem', fontWeight: selectedCourse?.id === course.id ? '600' : '400' }}>{course.title}</div>
+                                <Book size={16} opacity={0.7} />
+                                <div style={{ fontSize: '0.85rem', fontWeight: selectedCourse?.id === course.id ? '600' : '400' }}>{course.title}</div>
                             </div>
                         ))}
+                        {courses.length === 0 && (
+                            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>No courses found</div>
+                        )}
                     </div>
                 </div>
 
-                <div className="grade-table">
+                {/* ── Column 2: Student List ── */}
+                <div>
+                    <h3 style={{ marginBottom: '0.75rem', fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Students</h3>
+                    <div className="glass" style={{ borderRadius: '16px', overflow: 'hidden', maxHeight: 'calc(100vh - 200px)', display: 'flex', flexDirection: 'column' }}>
+                        {selectedCourse ? (
+                            <>
+                                <div style={{ padding: '0.75rem', borderBottom: '1px solid var(--glass-border)' }}>
+                                    <div style={{ position: 'relative' }}>
+                                        <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                                        <input
+                                            type="text"
+                                            placeholder="Search students..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            style={{
+                                                width: '100%', padding: '8px 8px 8px 34px', borderRadius: '10px',
+                                                border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)',
+                                                color: 'var(--text)', fontSize: '0.8rem'
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                                <div style={{ overflowY: 'auto', padding: '0.5rem' }}>
+                                    {filteredStudents.length > 0 ? filteredStudents.map(student => {
+                                        const hasGrades = grades.some(g => g.studentId === student.studentId)
+                                        return (
+                                            <div
+                                                key={student.studentId}
+                                                className={`student-list-item ${selectedStudent?.studentId === student.studentId ? 'active' : ''}`}
+                                                onClick={() => handleStudentSelect(student)}
+                                            >
+                                                <div style={{
+                                                    width: '36px', height: '36px', borderRadius: '10px',
+                                                    background: selectedStudent?.studentId === student.studentId ? 'rgba(255,255,255,0.2)' : 'rgba(99, 102, 241, 0.1)',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                                                }}>
+                                                    <User size={16} />
+                                                </div>
+                                                <div style={{ minWidth: 0 }}>
+                                                    <div style={{ fontSize: '0.85rem', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                        {student.studentName}
+                                                    </div>
+                                                    <div className="student-id">ID: #{student.studentId}</div>
+                                                </div>
+                                                {hasGrades && (
+                                                    <div style={{
+                                                        marginLeft: 'auto', width: '8px', height: '8px',
+                                                        borderRadius: '50%', background: 'var(--success)', flexShrink: 0
+                                                    }} title="Has grades" />
+                                                )}
+                                            </div>
+                                        )
+                                    }) : (
+                                        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                                            No students enrolled
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        ) : (
+                            <div style={{ padding: '3rem 1.5rem', textAlign: 'center' }}>
+                                <User size={32} color="var(--text-muted)" style={{ marginBottom: '0.75rem', opacity: 0.3 }} />
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Select a course first</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* ── Column 3: Grade Details ── */}
+                <div>
+                    <h3 style={{ marginBottom: '0.75rem', fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        {selectedStudent ? `${selectedStudent.studentName}'s Grades` : 'Grade Details'}
+                    </h3>
                     {!selectedCourse ? (
                         <div className="glass" style={{ height: '400px', borderRadius: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '2rem' }}>
-                            <GraduationCap size={64} color="var(--primary)" style={{ marginBottom: '1.5rem', opacity: 0.5 }} />
-                            <h3>Gradebook</h3>
-                            <p style={{ color: 'var(--text-muted)', maxWidth: '300px' }}>Select a course to view the gradebook and record new grades.</p>
+                            <GraduationCap size={56} color="var(--primary)" style={{ marginBottom: '1.5rem', opacity: 0.4 }} />
+                            <h3 style={{ marginBottom: '0.5rem' }}>Gradebook</h3>
+                            <p style={{ color: 'var(--text-muted)', maxWidth: '280px', fontSize: '0.9rem' }}>Select a course, then a student to view and manage their grades.</p>
+                        </div>
+                    ) : !selectedStudent ? (
+                        <div className="glass" style={{ height: '400px', borderRadius: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '2rem' }}>
+                            <User size={56} color="var(--primary)" style={{ marginBottom: '1.5rem', opacity: 0.4 }} />
+                            <h3 style={{ marginBottom: '0.5rem' }}>Select a Student</h3>
+                            <p style={{ color: 'var(--text-muted)', maxWidth: '280px', fontSize: '0.9rem' }}>
+                                Choose a student from <strong>{selectedCourse.title}</strong> to view their grades.
+                            </p>
                         </div>
                     ) : (
                         <div className="glass" style={{ borderRadius: '24px', overflow: 'hidden' }}>
-                            <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--glass-border)' }}>
-                                <h3 style={{ fontSize: '1.25rem' }}>{selectedCourse.title} - Gradebook</h3>
+                            {/* Student header */}
+                            <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <div style={{
+                                        width: '48px', height: '48px', borderRadius: '14px',
+                                        background: 'rgba(99, 102, 241, 0.1)', display: 'flex',
+                                        alignItems: 'center', justifyContent: 'center'
+                                    }}>
+                                        <User size={22} color="var(--primary)" />
+                                    </div>
+                                    <div>
+                                        <h3 style={{ fontSize: '1.1rem', marginBottom: '2px' }}>{selectedStudent.studentName}</h3>
+                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                            {selectedCourse.title} • ID: #{selectedStudent.studentId}
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    className="btn btn-primary"
+                                    style={{ width: 'auto', padding: '8px 16px', fontSize: '0.85rem' }}
+                                    onClick={() => openAddGradeModal(selectedStudent)}
+                                >
+                                    <Plus size={16} />
+                                    <span>Add</span>
+                                </button>
                             </div>
+
+                            {/* Summary stats */}
+                            {filteredStudentGrades.length > 0 && (
+                                <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid var(--glass-border)', display: 'flex', gap: '2rem' }}>
+                                    <div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '2px' }}>Assignments</div>
+                                        <div style={{ fontSize: '1.2rem', fontWeight: '700' }}>{filteredStudentGrades.length}</div>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '2px' }}>Average</div>
+                                        <div style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--primary)' }}>
+                                            {(filteredStudentGrades.reduce((acc, g) => acc + g.percentage, 0) / filteredStudentGrades.length).toFixed(1)}%
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Grades table */}
                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                 <thead style={{ background: 'rgba(255,255,255,0.02)' }}>
                                     <tr>
-                                        <th style={{ padding: '1.2rem', textAlign: 'left', color: 'var(--text-muted)', fontWeight: '600' }}>STUDENT</th>
-                                        <th style={{ padding: '1.2rem', textAlign: 'left', color: 'var(--text-muted)', fontWeight: '600' }}>ASSIGNMENT</th>
-                                        <th style={{ padding: '1.2rem', textAlign: 'right', color: 'var(--text-muted)', fontWeight: '600' }}>SCORE</th>
+                                        <th style={{ padding: '1rem 1.5rem', textAlign: 'left', color: 'var(--text-muted)', fontWeight: '600', fontSize: '0.8rem' }}>ASSIGNMENT</th>
+                                        <th style={{ padding: '1rem 1.5rem', textAlign: 'right', color: 'var(--text-muted)', fontWeight: '600', fontSize: '0.8rem' }}>SCORE</th>
+                                        <th style={{ padding: '1rem 1.5rem', textAlign: 'right', color: 'var(--text-muted)', fontWeight: '600', fontSize: '0.8rem' }}>PERCENTAGE</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-
-                                    {students.length > 0 ? students.map(student => {
-                                        const studentGrade = grades.find(g => g.studentId === student.studentId);
-                                        return (
-                                            <tr key={student.studentId} style={{ borderTop: '1px solid var(--glass-border)' }}>
-                                                <td style={{ padding: '1.2rem' }}>
-                                                    <div style={{ fontWeight: '600' }}>{student.studentName}</div>
-                                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ID: #{student.studentId}</div>
-                                                </td>
-                                                <td style={{ padding: '1.2rem' }}>
-                                                    {studentGrade ? studentGrade.assignmentName : <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No assignment</span>}
-                                                </td>
-                                                <td style={{ padding: '1.2rem', textAlign: 'right' }}>
-                                                    {studentGrade ? (
-                                                        <>
-                                                            <div style={{ fontWeight: '700', color: 'var(--primary)' }}>{studentGrade.score} / {studentGrade.maxScore}</div>
-                                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{studentGrade.percentage.toFixed(1)}%</div>
-                                                        </>
-                                                    ) : (
-                                                        <span style={{ color: 'var(--text-muted)' }}>-</span>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        );
-                                    }) : (
+                                    {filteredStudentGrades.length > 0 ? filteredStudentGrades.map(g => (
+                                        <tr key={g.id} style={{ borderTop: '1px solid var(--glass-border)' }}>
+                                            <td style={{ padding: '1rem 1.5rem' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <Award size={16} color="var(--primary)" style={{ opacity: 0.6 }} />
+                                                    <span style={{ fontWeight: '500' }}>{g.assignmentName}</span>
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>
+                                                <span style={{ fontWeight: '700', color: 'var(--primary)' }}>{g.score}</span>
+                                                <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}> / {g.maxScore}</span>
+                                            </td>
+                                            <td style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
+                                                    <div style={{ width: '50px', height: '5px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', overflow: 'hidden' }}>
+                                                        <div style={{ width: `${g.percentage}%`, height: '100%', background: g.percentage >= 50 ? 'var(--success)' : 'var(--danger)', borderRadius: '10px' }}></div>
+                                                    </div>
+                                                    <span style={{ fontWeight: '600', fontSize: '0.85rem', color: g.percentage >= 50 ? 'var(--success)' : 'var(--danger)' }}>
+                                                        {g.percentage.toFixed(1)}%
+                                                    </span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )) : (
                                         <tr>
                                             <td colSpan="3" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                                                No students enrolled in this course yet.
+                                                <Award size={32} style={{ marginBottom: '0.75rem', opacity: 0.3 }} />
+                                                <div>No grades recorded yet</div>
+                                                <div style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}>Click "Add" to submit a grade for this student</div>
                                             </td>
                                         </tr>
                                     )}
@@ -268,6 +430,7 @@ const Grades = () => {
                 </div>
             </div>
 
+            {/* ── Add Grade Modal ── */}
             {showModal && (
                 <div style={{
                     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -284,13 +447,9 @@ const Grades = () => {
                                     value={formData.studentId}
                                     onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
                                     style={{
-                                        width: '100%',
-                                        padding: '0.75rem',
-                                        borderRadius: '12px',
-                                        border: '1px solid var(--glass-border)',
-                                        background: 'rgba(255,255,255,0.05)',
-                                        color: 'var(--text-primary)',
-                                        fontSize: '0.875rem'
+                                        width: '100%', padding: '0.75rem', borderRadius: '12px',
+                                        border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)',
+                                        color: 'var(--text)', fontSize: '0.875rem'
                                     }}
                                 >
                                     <option value="">Choose a student...</option>

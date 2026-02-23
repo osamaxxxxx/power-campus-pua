@@ -262,6 +262,52 @@ a:hover {
     font-weight: 800;
 }
 
+/* Logo Styles */
+.sidebar-logo {
+    height: 36px;
+    width: auto;
+    object-fit: contain;
+    border-radius: 6px;
+}
+
+.auth-logo {
+    max-width: 200px;
+    height: auto;
+    margin: 0 auto 1.5rem;
+    display: block;
+    border-radius: 12px;
+}
+
+/* Student list in grades */
+.student-list-item {
+    padding: 1rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 4px;
+}
+
+.student-list-item:hover {
+    background: rgba(99, 102, 241, 0.08);
+}
+
+.student-list-item.active {
+    background: var(--primary);
+    color: white;
+}
+
+.student-list-item.active .student-id {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.student-id {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
 .sidebar-header h2 {
     font-size: 1.25rem;
     font-weight: 700;
