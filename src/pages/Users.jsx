@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import userService from '../api/userService'
-import { Plus, Edit2, Trash2, UserPlus, Mail, Shield, Search, GraduationCap, Users as UsersIcon } from 'lucide-react'
+import { Plus, Edit2, Trash2, UserPlus, Mail, Shield, Search, GraduationCap, Users as UsersIcon, Key } from 'lucide-react'
 
 const Users = () => {
     const [users, setUsers] = useState([])
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState('')
-    const [showModal, setShowModal] = useState(false)
+    const [showModal, setShowModal] = useState(false);
+    const [resetModalUser, setResetModalUser] = useState(null);
+    const [newPassword, setNewPassword] = useState('');
     const [editingUser, setEditingUser] = useState(null)
     const [activeTab, setActiveTab] = useState('students') // 'students' or 'instructors'
     const [formData, setFormData] = useState({
@@ -70,10 +72,16 @@ const Users = () => {
     }
 
     const openAddModal = (role) => {
-        setEditingUser(null)
-        setFormData({ name: '', email: '', password: '', role })
-        setShowModal(true)
-    }
+        setEditingUser(null);
+        setFormData({ name: '', email: '', password: '', role });
+        setShowModal(true);
+    };
+
+    const openResetPasswordModal = (user) => {
+        setResetModalUser(user);
+        setNewPassword('');
+    };
+
 
     const filteredUsers = users.filter(user => {
         const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -197,6 +205,9 @@ const Users = () => {
                                 <button className="btn" style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '8px' }} onClick={() => handleDelete(user.id)}>
                                     <Trash2 size={16} color="var(--danger)" />
                                 </button>
+                                <button className="btn" style={{ background: 'var(--background)', padding: '8px' }} onClick={() => openResetPasswordModal(user)}>
+                                    <Key size={16} color="var(--warning)" />
+                                </button>
                             </div>
                         </div>
                     ))}
@@ -264,6 +275,32 @@ const Users = () => {
                                 <button type="submit" className="btn btn-primary">Save {formData.role}</button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+            {/* Reset Password Modal */}
+            {resetModalUser && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.8)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    zIndex: 1000, backdropFilter: 'blur(8px)'
+                }}>
+                    <div className="glass" style={{ padding: '2rem', borderRadius: '24px', width: '100%', maxWidth: '400px' }}>
+                        <h2 style={{ marginBottom: '1rem' }}>Reset Password for {resetModalUser.name}</h2>
+                        <div className="form-group">
+                            <label>New Password</label>
+                            <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)' }} />
+                        </div>
+                        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                            <button className="btn" style={{ background: 'var(--background)' }} onClick={() => setResetModalUser(null)}>Cancel</button>
+                            <button className="btn btn-primary" onClick={async () => {
+                                await userService.resetPassword(resetModalUser.id, { newPassword });
+                                setResetModalUser(null);
+                                loadUsers();
+                            }}>Reset</button>
+                        </div>
                     </div>
                 </div>
             )}

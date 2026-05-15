@@ -6,7 +6,7 @@ import { useTheme } from '../contexts/ThemeContext'
 import {
     LayoutDashboard,
     BookOpen,
-    Calendar,
+
     GraduationCap,
     ClipboardCheck,
     LogOut,
@@ -36,7 +36,7 @@ const Layout = ({ children }) => {
         { icon: <UserIcon size={20} />, label: 'Users', path: '/users', roles: ['Admin'] },
         { icon: <BookOpen size={20} />, label: 'Courses', path: '/courses', roles: ['Instructor', 'Student'] },
         { icon: <BookOpen size={20} />, label: 'My Courses', path: '/my-courses', roles: ['Student'] },
-        { icon: <Calendar size={20} />, label: 'Schedule', path: '/schedule', roles: ['Instructor', 'Student'] },
+
         { icon: <ClipboardCheck size={20} />, label: 'Attendance', path: '/attendance', roles: ['Instructor', 'Student'] },
         { icon: <GraduationCap size={20} />, label: 'Grades', path: '/grades', roles: ['Instructor', 'Student'] },
     ]

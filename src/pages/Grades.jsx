@@ -24,6 +24,7 @@ const Grades = () => {
         score: '',
         maxScore: '100'
     })
+    const [editingGrade, setEditingGrade] = useState(null)
 
     useEffect(() => {
         if (user.role === 'Student') {
@@ -84,14 +85,26 @@ const Grades = () => {
     const handleSubmitGrade = async (e) => {
         e.preventDefault()
         try {
-            await gradeService.submitGrade({
+            const gradePayload = {
                 ...formData,
                 studentId: parseInt(formData.studentId),
                 courseId: selectedCourse.id,
                 score: parseFloat(formData.score),
                 maxScore: parseFloat(formData.maxScore)
-            })
+            }
+
+            if (editingGrade) {
+                await gradeService.updateGrade(editingGrade.id, {
+                    assignmentName: formData.assignmentName,
+                    score: parseFloat(formData.score),
+                    maxScore: parseFloat(formData.maxScore)
+                })
+            } else {
+                await gradeService.submitGrade(gradePayload)
+            }
+            
             setShowModal(false)
+            setEditingGrade(null)
             // Refresh grades
             const gradeData = await gradeService.getCourseGrades(selectedCourse.id)
             setGrades(gradeData)
@@ -106,12 +119,25 @@ const Grades = () => {
     }
 
     const openAddGradeModal = (student = null) => {
+        setEditingGrade(null)
         setFormData({
             studentId: student ? student.studentId.toString() : '',
             courseId: '',
             assignmentName: '',
             score: '',
             maxScore: '100'
+        })
+        setShowModal(true)
+    }
+
+    const openEditGradeModal = (grade) => {
+        setEditingGrade(grade)
+        setFormData({
+            studentId: grade.studentId.toString(),
+            courseId: grade.courseId.toString(),
+            assignmentName: grade.assignmentName,
+            score: grade.score.toString(),
+            maxScore: grade.maxScore.toString()
         })
         setShowModal(true)
     }
@@ -388,6 +414,7 @@ const Grades = () => {
                                         <th style={{ padding: '1rem 1.5rem', textAlign: 'left', color: 'var(--text-muted)', fontWeight: '600', fontSize: '0.8rem' }}>ASSIGNMENT</th>
                                         <th style={{ padding: '1rem 1.5rem', textAlign: 'right', color: 'var(--text-muted)', fontWeight: '600', fontSize: '0.8rem' }}>SCORE</th>
                                         <th style={{ padding: '1rem 1.5rem', textAlign: 'right', color: 'var(--text-muted)', fontWeight: '600', fontSize: '0.8rem' }}>PERCENTAGE</th>
+                                        <th style={{ padding: '1rem 1.5rem', textAlign: 'right', color: 'var(--text-muted)', fontWeight: '600', fontSize: '0.8rem' }}>ACTIONS</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -412,6 +439,18 @@ const Grades = () => {
                                                         {g.percentage.toFixed(1)}%
                                                     </span>
                                                 </div>
+                                            </td>
+                                            <td style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>
+                                                <button 
+                                                    className="btn" 
+                                                    style={{ width: 'auto', padding: '6px', background: 'rgba(99, 102, 241, 0.1)' }}
+                                                    onClick={() => openEditGradeModal(g)}
+                                                >
+                                                    <Plus size={14} style={{ transform: 'rotate(45deg)' }} /> 
+                                                    {/* Using Plus rotated as a simple edit/cross icon if Edit2 is not available, but Edit2 is available in Users.jsx, let me check icons */}
+                                                    {/* Actually, let's use Edit2 if possible. I'll check the imports. */}
+                                                    <span style={{ fontSize: '0.75rem' }}>Edit</span>
+                                                </button>
                                             </td>
                                         </tr>
                                     )) : (
@@ -438,18 +477,20 @@ const Grades = () => {
                     justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(8px)'
                 }}>
                     <div className="glass" style={{ padding: '2.5rem', borderRadius: '24px', width: '100%', maxWidth: '500px' }}>
-                        <h2 style={{ marginBottom: '1.5rem' }}>Submit Grade</h2>
+                        <h2 style={{ marginBottom: '1.5rem' }}>{editingGrade ? 'Update Grade' : 'Submit Grade'}</h2>
                         <form onSubmit={handleSubmitGrade}>
                             <div className="form-group">
                                 <label>Select Student</label>
                                 <select
                                     required
+                                    disabled={!!editingGrade}
                                     value={formData.studentId}
                                     onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
                                     style={{
                                         width: '100%', padding: '0.75rem', borderRadius: '12px',
                                         border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)',
-                                        color: 'var(--text)', fontSize: '0.875rem'
+                                        color: 'var(--text)', fontSize: '0.875rem',
+                                        opacity: editingGrade ? 0.6 : 1
                                     }}
                                 >
                                     <option value="">Choose a student...</option>
@@ -497,8 +538,8 @@ const Grades = () => {
                                 </div>
                             </div>
                             <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                                <button type="button" className="btn" style={{ background: 'var(--surface)' }} onClick={() => setShowModal(false)}>Cancel</button>
-                                <button type="submit" className="btn btn-primary">Submit Grade</button>
+                                <button type="button" className="btn" style={{ background: 'var(--surface)' }} onClick={() => { setShowModal(false); setEditingGrade(null); }}>Cancel</button>
+                                <button type="submit" className="btn btn-primary">{editingGrade ? 'Update Grade' : 'Submit Grade'}</button>
                             </div>
                         </form>
                     </div>

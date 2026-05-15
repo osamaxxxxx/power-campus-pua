@@ -24,6 +24,11 @@ const userService = {
     deleteUser: async (id) => {
         const response = await API.delete(`/api/Users/${id}`)
         return response.data
+    },
+
+    resetPassword: async (id, passwordData) => {
+        const response = await API.post(`/api/Users/${id}/reset-password`, passwordData)
+        return response.data
     }
 }
 

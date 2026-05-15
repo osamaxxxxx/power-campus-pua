@@ -14,6 +14,11 @@ const gradeService = {
     submitGrade: async (gradeData) => {
         const response = await API.post('/api/Grades', gradeData)
         return response.data
+    },
+
+    updateGrade: async (id, gradeData) => {
+        const response = await API.put(`/api/Grades/${id}`, gradeData)
+        return response.data
     }
 }
 
